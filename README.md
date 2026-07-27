@@ -23,23 +23,114 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
 ```json
 "hooks": {
   "SessionStart": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white" }
   ]}],
   "UserPromptSubmit": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green" }
   ]}],
   "Notification": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red" }
   ]}],
   "PermissionRequest": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red" }
   ]}],
   "Stop": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green" }
   ]}],
   "SessionEnd": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
+    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white" }
   ]}]
+}
+```
+
+### Real example (from a live `~/.claude/settings.json`)
+
+This is the actual `hooks` block from a working setup, paths swapped for placeholders. Note some events run other, unrelated hooks (a mode-tracking plugin, an `rtk` wrapper) alongside the light call — hooks for the same event just run as a list, in order:
+
+```json
+"hooks": {
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<path-to-node>\" \"<claude-config-dir>/hooks/some-other-hook.js\"",
+          "timeout": 5,
+          "statusMessage": "Running some other hook..."
+        },
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<path-to-node>\" \"<claude-config-dir>/hooks/some-other-hook.js\"",
+          "timeout": 5,
+          "statusMessage": "Running some other hook..."
+        },
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Notification": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PermissionRequest": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "SessionEnd": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -54,7 +145,7 @@ AGENT_ID="$(echo "$INPUT" | jq -r '.agent_id // empty')"
 if [ -n "$AGENT_ID" ]; then
   exit 0
 fi
-cd /path/to/wipro-light-control-simple
+cd /path/to/claude-lightbulb-hooks
 exec python3 light.py -q -s on -C "$COLOR" -b 100
 ```
 
