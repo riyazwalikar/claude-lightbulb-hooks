@@ -1,0 +1,15 @@
+# Secrets — Tuya API keys, device local keys
+light.json
+devices.json
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor/OS
+.DS_Store
+
+# Session memory (local, not repo content)
+.remember/
