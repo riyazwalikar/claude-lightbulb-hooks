@@ -23,22 +23,22 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
 ```json
 "hooks": {
   "SessionStart": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
   ]}],
   "UserPromptSubmit": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
   ]}],
   "Notification": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
   ]}],
   "PermissionRequest": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
   ]}],
   "Stop": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
   ]}],
   "SessionEnd": [{ "hooks": [
-    { "type": "command", "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
   ]}]
 }
 ```
@@ -54,13 +54,13 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<path-to-node>\" \"<claude-config-dir>/hooks/some-other-hook.js\"",
+          "command": "\"<path-to-node>\" \"~/.claude/hooks/some-other-hook.js\"",
           "timeout": 5,
           "statusMessage": "Running some other hook..."
         },
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white",
+          "command": "\"~/.claude/hooks/light-hook.sh\" white",
           "timeout": 10
         }
       ]
@@ -71,13 +71,13 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<path-to-node>\" \"<claude-config-dir>/hooks/some-other-hook.js\"",
+          "command": "\"<path-to-node>\" \"~/.claude/hooks/some-other-hook.js\"",
           "timeout": 5,
           "statusMessage": "Running some other hook..."
         },
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green",
+          "command": "\"~/.claude/hooks/light-hook.sh\" green",
           "timeout": 10
         }
       ]
@@ -89,7 +89,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red",
+          "command": "\"~/.claude/hooks/light-hook.sh\" red",
           "timeout": 10
         }
       ]
@@ -101,7 +101,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" red",
+          "command": "\"~/.claude/hooks/light-hook.sh\" red",
           "timeout": 10
         }
       ]
@@ -113,7 +113,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" green",
+          "command": "\"~/.claude/hooks/light-hook.sh\" green",
           "timeout": 10
         }
       ]
@@ -125,7 +125,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"<claude-config-dir>/hooks/light-hook.sh\" white",
+          "command": "\"~/.claude/hooks/light-hook.sh\" white",
           "timeout": 10
         }
       ]
