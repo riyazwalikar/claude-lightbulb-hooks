@@ -2,6 +2,8 @@
 
 A Wipro/Tuya smart bulb wired into [Claude Code](https://claude.com/claude-code) hooks as an ambient status indicator. The bulb's color tells you what your session is doing without looking at the terminal — idle, working, or waiting on you for a permission decision.
 
+Bulb used: [Wipro NS9400 (Amazon.in)](https://www.amazon.in/wipro-NS9400-Compatible-Assistant-Standard/dp/B095SWYF6M/).
+
 `light.py` is the CLI that drives the bulb (cloud or local LAN). `light-hook.sh` is the wrapper Claude Code's hooks call into.
 
 ## Status colors
