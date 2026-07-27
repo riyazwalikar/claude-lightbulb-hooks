@@ -264,3 +264,7 @@ Hex accepted: `#ff0000`, `#f00`, `#00ff00`, etc.
 **LAN: "Unable to Connect" (901)** — bulb not reachable. Check IP, network isolation, or Wi-Fi client isolation on your router. Fall back to cloud mode.
 
 **Light doesn't match session state / flickers to wrong color** — check whether a subagent fired the hook. `light-hook.sh` should skip when `agent_id` is present in stdin JSON; if it's not skipping, verify `jq` is installed and on `PATH`.
+
+## Reference
+
+- [Claude Code hooks docs](https://code.claude.com/docs/en/hooks.md)
