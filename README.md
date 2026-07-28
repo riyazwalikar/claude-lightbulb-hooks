@@ -13,9 +13,12 @@ Bulb used: [Wipro NS9400 (Amazon.in)](https://www.amazon.in/wipro-NS9400-Compati
 | White | `SessionStart` | Session booted |
 | Green | `UserPromptSubmit` | Claude working on your prompt |
 | Green | `PreToolUse` | Claude actively running tools — keeps the light fresh during long turns |
-| Red | `Notification`, `PermissionRequest` | Needs your attention — permission prompt or notification up |
-| Green | `Stop` | Claude idle, waiting for next prompt |
+| Red | `Notification` (non-idle), `PermissionRequest` | Needs your attention — permission prompt or notification up |
+| White | `Notification` (idle ping) | "Waiting for your input" — session idle |
+| White | `Stop` | Claude idle, waiting for next prompt |
 | White | `SessionEnd` | Session terminated (`/clear`, `/exit`, logout, etc.) |
+
+`Notification` fires for both "permission needed" and the idle "waiting for your input" ping. `light-hook.sh notify` reads the payload and picks white for the idle ping, red otherwise — so red always means *act now*.
 
 ## Claude Code hook wiring
 
@@ -33,13 +36,13 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
   ]}],
   "Notification": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" notify" }
   ]}],
   "PermissionRequest": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
   ]}],
   "Stop": [{ "hooks": [
-    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
   ]}],
   "SessionEnd": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" white" }
@@ -118,7 +121,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"~/.claude/hooks/light-hook.sh\" red",
+          "command": "\"~/.claude/hooks/light-hook.sh\" notify",
           "timeout": 10
         }
       ]
@@ -142,7 +145,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
       "hooks": [
         {
           "type": "command",
-          "command": "\"~/.claude/hooks/light-hook.sh\" green",
+          "command": "\"~/.claude/hooks/light-hook.sh\" white",
           "timeout": 10
         }
       ]
@@ -163,7 +166,7 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
 }
 ```
 
-`light-hook.sh`:
+`light-hook.sh` (10.10.10.100 is my bulbs local IP):
 
 ```bash
 #!/usr/bin/env bash
@@ -174,8 +177,19 @@ AGENT_ID="$(echo "$INPUT" | jq -r '.agent_id // empty')"
 if [ -n "$AGENT_ID" ]; then
   exit 0
 fi
+
+# "notify" decides from the payload: idle "waiting for your input"
+# ping = white (session idle); anything else = red (act now).
+if [ "$COLOR" = "notify" ]; then
+  MESSAGE="$(echo "$INPUT" | jq -r '.message // empty')"
+  case "$MESSAGE" in
+    *"waiting for your input"*) COLOR="white" ;;
+    *)                          COLOR="red" ;;
+  esac
+fi
+
 cd /path/to/claude-lightbulb-hooks
-exec python3 light.py -q -s on -C "$COLOR" -b 100
+exec python3 light.py -q --lan 10.10.10.100 -s on -C "$COLOR" -b 100
 ```
 
 To wire a new event, add another block calling `light-hook.sh <color>`, or point it straight at `light.py` if you don't need the subagent guard.
