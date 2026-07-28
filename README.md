@@ -12,6 +12,7 @@ Bulb used: [Wipro NS9400 (Amazon.in)](https://www.amazon.in/wipro-NS9400-Compati
 |---|---|---|
 | White | `SessionStart` | Session booted |
 | Green | `UserPromptSubmit` | Claude working on your prompt |
+| Green | `PreToolUse` | Claude actively running tools — keeps the light fresh during long turns |
 | Red | `Notification`, `PermissionRequest` | Needs your attention — permission prompt or notification up |
 | Green | `Stop` | Claude idle, waiting for next prompt |
 | White | `SessionEnd` | Session terminated (`/clear`, `/exit`, logout, etc.) |
@@ -28,6 +29,9 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
   "UserPromptSubmit": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
   ]}],
+  "PreToolUse": [{ "hooks": [
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
+  ]}],
   "Notification": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" red" }
   ]}],
@@ -42,6 +46,10 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
   ]}]
 }
 ```
+
+### Why `PreToolUse` is needed
+
+Without it, the light goes stale during long turns. `UserPromptSubmit` fires once when you hit enter; the next color event is `Stop` when the turn ends. Between those, a mid-turn `Notification` or `PermissionRequest` paints the bulb red — and it *stays* red even after you approve and Claude resumes working, because nothing resets it. `PreToolUse` fires before every tool call, so the moment work resumes the bulb goes green again. Red then means what it should: Claude is *currently* blocked on you.
 
 ### Real example (from a live `~/.claude/settings.json`)
 
@@ -75,6 +83,27 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
           "timeout": 5,
           "statusMessage": "Running some other hook..."
         },
+        {
+          "type": "command",
+          "command": "\"~/.claude/hooks/light-hook.sh\" green",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "rtk hook claude"
+        }
+      ]
+    },
+    {
+      "matcher": "",
+      "hooks": [
         {
           "type": "command",
           "command": "\"~/.claude/hooks/light-hook.sh\" green",
@@ -264,6 +293,8 @@ Hex accepted: `#ff0000`, `#f00`, `#00ff00`, etc.
 **LAN: "Unable to Connect" (901)** — bulb not reachable. Check IP, network isolation, or Wi-Fi client isolation on your router. Fall back to cloud mode.
 
 **Light doesn't match session state / flickers to wrong color** — check whether a subagent fired the hook. `light-hook.sh` should skip when `agent_id` is present in stdin JSON; if it's not skipping, verify `jq` is installed and on `PATH`.
+
+**Light stuck red while Claude is clearly working** — you're missing the `PreToolUse` → green wiring. During a long turn nothing re-fires `UserPromptSubmit`, so a mid-turn red never resets. Add the `PreToolUse` block (see [Why `PreToolUse` is needed](#why-pretooluse-is-needed)).
 
 ## Reference
 
