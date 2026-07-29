@@ -1,6 +1,7 @@
 # Secrets — Tuya API keys, device local keys
 light.json
 devices.json
+snapshot.json
 
 # Python
 __pycache__/

@@ -97,6 +97,18 @@ def lan_send(d, code, value):
     }
     if code not in code_map:
         sys.exit(f'Unknown LAN code: {code}')
+    if code == 'colour_data':
+        c = json.loads(value)
+        if d.version < 3.3:
+            # Old bulbs (v3.1) reject the JSON form — colour_data is a
+            # 14-char hex string: rrggbb + hhhh + ss + vv.
+            r, g, b = colorsys.hsv_to_rgb(c['h'] / 360.0, c['s'] / 255.0, c['v'] / 255.0)
+            hexval = '%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
+            hexval += '%04x%02x%02x' % (int(c['h']), int(c['s']), int(c['v']))
+            d.set_value(code_map[code], hexval)
+        else:
+            d.set_value(code_map[code], value)
+        return
     dps = code_map[code]
     d.set_value(dps, value)
 
