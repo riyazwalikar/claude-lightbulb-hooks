@@ -226,7 +226,7 @@ cp light.json.example light.json
 | `api_secret` | Cloud | Same page → Access Secret |
 | `api_region` | Cloud | `cn`, `eu`, `eu-w`, `in`, `sg`, `us`, `us-e` |
 | `device_local_key` | LAN | iot.tuya.com → Devices → linked device → Local Key |
-| `device_version` | LAN | Default `3.3`. Try `3.4` or `3.5` if connection fails |
+| `device_version` | LAN | Default `3.3`. Older bulbs use `3.1`, newer `3.4`/`3.5` — see scan below |
 
 All fields can live in one config file — unused fields are ignored.
 
@@ -238,6 +238,17 @@ All fields can live in one config file — unused fields are ignored.
 4. Note `api_key` and `api_secret` from project's Authorization page
 
 Cloud mode works immediately. LAN mode also needs the bulb IP (use `--lan <ip>`).
+
+### LAN shortcut: tinytuya scan
+
+`python3 -m tinytuya scan` listens for device broadcasts and reports each bulb's **IP, device ID, local key, and protocol version** — everything `light.json` needs for LAN mode, in one shot:
+
+```
+Smart light   Product ID = key4fv3xs8twchhy  [Valid Broadcast]:
+    Address = 10.10.10.109   Device ID = 63076103...  Local Key = Mm!*...  Version = 3.1
+```
+
+Use the reported `Version` as `device_version` — guessing it is the most common LAN failure (see 904 below). The scan also writes `snapshot.json`; it's gitignored here since it contains the local key.
 
 ## Manual CLI usage
 
@@ -279,7 +290,8 @@ python3 light.py --lan 192.168.1.100 -s off
 
 Finding your bulb's IP:
 ```bash
-arp -a | grep esp
+python3 -m tinytuya scan   # best — reports IP, version, and local key
+arp -a | grep esp          # fallback
 # or check router's DHCP client list for MAC matching device_id suffix
 ```
 
@@ -305,6 +317,10 @@ Hex accepted: `#ff0000`, `#f00`, `#00ff00`, etc.
 **Cloud: "permission deny" (1106)** — device not linked to cloud project. Go to iot.tuya.com → Devices → Add Device → enter device ID.
 
 **LAN: "Unable to Connect" (901)** — bulb not reachable. Check IP, network isolation, or Wi-Fi client isolation on your router. Fall back to cloud mode.
+
+**LAN: "Unexpected Payload from Device" (904)** — wrong `device_version`. The bulb decrypts your request but rejects the framing (tinytuya debug shows a plaintext `data format error` reply). Run `python3 -m tinytuya scan` and set `device_version` to the version it reports. Older Wipro firmware is `3.1`, not the default `3.3`.
+
+**LAN: "Check device key or version" (914)** — version is right but the local key is wrong (or vice versa). Re-pull the key from iot.tuya.com; re-pairing the bulb rotates it.
 
 **Light doesn't match session state / flickers to wrong color** — check whether a subagent fired the hook. `light-hook.sh` should skip when `agent_id` is present in stdin JSON; if it's not skipping, verify `jq` is installed and on `PATH`.
 
