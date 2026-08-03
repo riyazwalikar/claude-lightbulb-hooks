@@ -13,6 +13,7 @@ Bulb used: [Wipro NS9400 (Amazon.in)](https://www.amazon.in/wipro-NS9400-Compati
 | White | `SessionStart` | Session booted |
 | Green | `UserPromptSubmit` | Claude working on your prompt |
 | Green | `PreToolUse` | Claude actively running tools — keeps the light fresh during long turns |
+| Green | `PostToolUse` | A tool just finished — clears a red permission prompt as soon as the approved tool completes |
 | Red | `Notification` (non-idle), `PermissionRequest` | Needs your attention — permission prompt or notification up |
 | White | `Notification` (idle ping) | "Waiting for your input" — session idle |
 | White | `Stop` | Claude idle, waiting for next prompt |
@@ -35,6 +36,9 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
   "PreToolUse": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
   ]}],
+  "PostToolUse": [{ "hooks": [
+    { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" green" }
+  ]}],
   "Notification": [{ "hooks": [
     { "type": "command", "command": "\"~/.claude/hooks/light-hook.sh\" notify" }
   ]}],
@@ -50,9 +54,13 @@ Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>
 }
 ```
 
-### Why `PreToolUse` is needed
+### Why both `PreToolUse` and `PostToolUse` are needed
 
-Without it, the light goes stale during long turns. `UserPromptSubmit` fires once when you hit enter; the next color event is `Stop` when the turn ends. Between those, a mid-turn `Notification` or `PermissionRequest` paints the bulb red — and it *stays* red even after you approve and Claude resumes working, because nothing resets it. `PreToolUse` fires before every tool call, so the moment work resumes the bulb goes green again. Red then means what it should: Claude is *currently* blocked on you.
+`UserPromptSubmit` fires once when you hit enter; the next color event is `Stop` when the turn ends. Between those, a mid-turn `Notification` or `PermissionRequest` paints the bulb red.
+
+The first fix attempt was `PreToolUse` alone, on the assumption it re-fires after you approve a permission prompt and resets the light. It doesn't — `PreToolUse` fires exactly once, *before* the permission check, not after you click "Yes". The real event order is `PreToolUse` (green) → `PermissionRequest` (red) → you approve → the tool just runs, with no hook event in between (Claude Code has no `PermissionApproved` hook). So the bulb stayed red until `Stop`, no matter how fast you approved.
+
+`PostToolUse` fires right after a tool finishes executing, including the one you just approved — wiring it to green clears red the moment that tool completes instead of waiting for the whole turn to end. It's not literally instant on keypress (no hook exists for that), but it's the closest available signal.
 
 ### Real example (from a live `~/.claude/settings.json`)
 
@@ -134,6 +142,18 @@ This is the actual `hooks` block from a working setup, paths swapped for placeho
         {
           "type": "command",
           "command": "\"~/.claude/hooks/light-hook.sh\" red",
+          "timeout": 10
+        }
+      ]
+    }
+  ],
+  "PostToolUse": [
+    {
+      "matcher": "",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "\"~/.claude/hooks/light-hook.sh\" green",
           "timeout": 10
         }
       ]
@@ -324,7 +344,7 @@ Hex accepted: `#ff0000`, `#f00`, `#00ff00`, etc.
 
 **Light doesn't match session state / flickers to wrong color** — check whether a subagent fired the hook. `light-hook.sh` should skip when `agent_id` is present in stdin JSON; if it's not skipping, verify `jq` is installed and on `PATH`.
 
-**Light stuck red while Claude is clearly working** — you're missing the `PreToolUse` → green wiring. During a long turn nothing re-fires `UserPromptSubmit`, so a mid-turn red never resets. Add the `PreToolUse` block (see [Why `PreToolUse` is needed](#why-pretooluse-is-needed)).
+**Light stuck red while Claude is clearly working** — you're missing the `PostToolUse` → green wiring. `PreToolUse` alone won't fix this: it fires once, before a permission prompt, not after you approve it. Add the `PostToolUse` block (see [Why both `PreToolUse` and `PostToolUse` are needed](#why-both-pretooluse-and-posttooluse-are-needed)).
 
 ## Reference
 
