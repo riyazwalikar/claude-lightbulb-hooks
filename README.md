@@ -25,6 +25,8 @@ Bulb used: [Wipro NS9400 (Amazon.in)](https://www.amazon.in/wipro-NS9400-Compati
 
 Configured in `~/.claude/settings.json`. Each event calls `light-hook.sh <color>`, which reads the hook's stdin JSON and skips the call if `agent_id` is present — meaning it's a subagent, not the main session. Without that guard, every background subagent spawn/exit would re-fire `SessionStart`/`SessionEnd` and stomp the light with the wrong color.
 
+Hooks can also live in a repo's `.claude/settings.json`. That doesn't replace the user-level config — Claude Code merges hook lists across scopes, so a project-level `PreToolUse` hook runs *alongside* the one in `~/.claude/settings.json`, not instead of it. Keep the light wiring in user settings (it's session-wide) and use project settings for repo-specific hooks.
+
 ```json
 "hooks": {
   "SessionStart": [{ "hooks": [
