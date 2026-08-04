@@ -56,6 +56,8 @@ Hooks can also live in a repo's `.claude/settings.json`. That doesn't replace th
 }
 ```
 
+`SessionEnd` fires on `/clear`, `/exit`, logout, or any other session termination — wiring it to white means the bulb doesn't sit green/red after you've walked away from the session entirely.
+
 ### Why both `PreToolUse` and `PostToolUse` are needed
 
 `UserPromptSubmit` fires once when you hit enter; the next color event is `Stop` when the turn ends. Between those, a mid-turn `Notification` or `PermissionRequest` paints the bulb red.
